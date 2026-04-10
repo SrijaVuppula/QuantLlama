@@ -1,2 +1,4 @@
 config,precision,perplexity_wikitext2,speed_tokens_per_sec,peak_vram_gb,load_time_sec
 meta-llama/Llama-3.1-8B | fp16 | baseline,fp16,6.1885,36.26,18.984,256.5
+meta-llama/Llama-3.1-8B | int4-nf4 | bitsandbytes,int4-nf4,6.5784,18.01,9.425,116.0
+meta-llama/Llama-3.1-8B | int4-gptq | ModelCloud pretrained,int4-gptq,6.5497,4.35,9.453,40.9
