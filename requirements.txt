@@ -1,0 +1,19 @@
+# PyTorch — install separately with the CUDA wheel:
+# pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
+
+# Core HuggingFace stack
+transformers>=4.40.0
+tokenizers
+huggingface_hub
+datasets
+accelerate
+
+# Quantization
+bitsandbytes>=0.43.0
+
+# Fine-tuning
+peft>=0.10.0
+trl>=0.8.0
+
+# Demo
+gradio

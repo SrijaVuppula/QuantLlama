@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Virtual environment
+QuantLlama/
+
+# HuggingFace cache
+.cache/
+
+# Results (keep the CSV, ignore large outputs)
+*.bin
+*.safetensors
+*.pt
+*.pth
+
+# Logs
+*.log
+wandb/
+
+# OS
+.DS_Store
