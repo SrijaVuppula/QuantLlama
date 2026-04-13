@@ -44,6 +44,7 @@ Key findings:
 ---
 
 ## Repo Structure
+```
 QuantLlama/
 ├── setup/
 │   ├── install.sh              # PyTorch + library install commands
@@ -71,6 +72,7 @@ QuantLlama/
 ├── PHASE2_SUMMARY.md
 ├── PHASE3_SUMMARY.md
 └── PHASE4_SUMMARY.md
+```
 ---
 
 ## How to Reproduce
