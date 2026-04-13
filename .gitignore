@@ -21,3 +21,4 @@ wandb/
 
 # OS
 .DS_Store
+.gradio/
