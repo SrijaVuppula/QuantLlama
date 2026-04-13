@@ -5,205 +5,110 @@ pipeline_tag: text-generation
 tags:
 - base_model:adapter:meta-llama/Llama-3.1-8B
 - lora
+- qlora
 - sft
 - transformers
 - trl
+- quantization
+- instruction-tuning
+license: llama3
+language:
+- en
+datasets:
+- tatsu-lab/alpaca
 ---
 
-# Model Card for Model ID
+# Llama-3.1-8B QLoRA Alpaca — QuantLlama
 
-<!-- Provide a quick summary of what the model is/does. -->
+QLoRA fine-tuned adapter for `meta-llama/Llama-3.1-8B` on the Stanford Alpaca instruction-following dataset. Trained as part of a benchmarking study on 4-bit quantization and parameter-efficient fine-tuning for CSCI 4900/6900 at the University of Georgia.
 
+This is a **LoRA adapter only** — load it on top of the base model quantized to int4 (NF4) via bitsandbytes.
 
+## Benchmark Results
 
-## Model Details
+All configs evaluated on WikiText-2 perplexity, inference speed, and peak VRAM on an NVIDIA RTX 3090 (24 GB).
 
-### Model Description
+| Config | Precision | Perplexity ↓ | Speed (tok/s) ↑ | VRAM (GB) ↓ |
+|---|---|---|---|---|
+| Llama-3.1-8B fp16 baseline | fp16 | 6.1885 | 36.26 | 18.984 |
+| Llama-3.1-8B NF4 (bitsandbytes) | int4-nf4 | 6.5784 | 18.01 | 9.425 |
+| Llama-3.1-8B GPTQ (ModelCloud) | int4-gptq | 6.5497 | 4.35 | 9.453 |
+| **Llama-3.1-8B QLoRA-Alpaca (this model)** | int4-nf4-qlora | **6.6251** | **53.39** | **7.504** |
 
-<!-- Provide a longer summary of what this model is. -->
+The fine-tuned model is the **fastest and most memory-efficient** of all four configurations after `merge_and_unload()` fuses the LoRA matrices into the base weights.
 
+## How to Use
 
+```python
+import torch
+from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
+from peft import PeftModel
 
-- **Developed by:** [More Information Needed]
-- **Funded by [optional]:** [More Information Needed]
-- **Shared by [optional]:** [More Information Needed]
-- **Model type:** [More Information Needed]
-- **Language(s) (NLP):** [More Information Needed]
-- **License:** [More Information Needed]
-- **Finetuned from model [optional]:** [More Information Needed]
+base_model_id = "meta-llama/Llama-3.1-8B"
+adapter_id = "srijayadav/llama3-8b-qlora-alpaca"
 
-### Model Sources [optional]
+# Load base model in int4
+bnb_config = BitsAndBytesConfig(
+    load_in_4bit=True,
+    bnb_4bit_quant_type="nf4",
+    bnb_4bit_compute_dtype=torch.bfloat16,
+    bnb_4bit_use_double_quant=True,
+)
 
-<!-- Provide the basic links for the model. -->
+tokenizer = AutoTokenizer.from_pretrained(adapter_id)
+model = AutoModelForCausalLM.from_pretrained(
+    base_model_id,
+    quantization_config=bnb_config,
+    device_map="auto",
+)
 
-- **Repository:** [More Information Needed]
-- **Paper [optional]:** [More Information Needed]
-- **Demo [optional]:** [More Information Needed]
+# Load LoRA adapter on top
+model = PeftModel.from_pretrained(model, adapter_id)
 
-## Uses
-
-<!-- Address questions around how the model is intended to be used, including the foreseeable users of the model and those affected by the model. -->
-
-### Direct Use
-
-<!-- This section is for the model use without fine-tuning or plugging into a larger ecosystem/app. -->
-
-[More Information Needed]
-
-### Downstream Use [optional]
-
-<!-- This section is for the model use when fine-tuned for a task, or when plugged into a larger ecosystem/app -->
-
-[More Information Needed]
-
-### Out-of-Scope Use
-
-<!-- This section addresses misuse, malicious use, and uses that the model will not work well for. -->
-
-[More Information Needed]
-
-## Bias, Risks, and Limitations
-
-<!-- This section is meant to convey both technical and sociotechnical limitations. -->
-
-[More Information Needed]
-
-### Recommendations
-
-<!-- This section is meant to convey recommendations with respect to the bias, risk, and technical limitations. -->
-
-Users (both direct and downstream) should be made aware of the risks, biases and limitations of the model. More information needed for further recommendations.
-
-## How to Get Started with the Model
-
-Use the code below to get started with the model.
-
-[More Information Needed]
+# Inference
+prompt = "Below is an instruction that describes a task. Write a response that appropriately completes the request.\n\n### Instruction:\nExplain what gradient descent is in simple terms.\n\n### Response:\n"
+inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+outputs = model.generate(**inputs, max_new_tokens=200, temperature=0.7, do_sample=True)
+print(tokenizer.decode(outputs[0], skip_special_tokens=True))
+```
 
 ## Training Details
 
-### Training Data
+| Parameter | Value |
+|---|---|
+| Base model | meta-llama/Llama-3.1-8B |
+| Dataset | tatsu-lab/alpaca (49,401 train / 2,601 val) |
+| LoRA rank (r) | 16 |
+| LoRA alpha | 32 |
+| Target modules | q_proj, v_proj |
+| Dropout | 0.05 |
+| Epochs | 1 |
+| Batch size | 4 (grad accum 8, effective 32) |
+| Learning rate | 2e-4 |
+| LR scheduler | cosine with 3% warmup |
+| Max sequence length | 512 |
+| Packing | True |
+| Optimizer | paged_adamw_32bit |
+| Compute dtype | bfloat16 |
+| Training time | ~1.92 hours |
+| Adapter size | 44.5 MB |
+| Hardware | NVIDIA RTX 3090 24 GB |
+| Trainable params | 6,815,744 / 8,037,076,992 (0.085%) |
 
-<!-- This should link to a Dataset Card, perhaps with a short stub of information on what the training data is all about as well as documentation related to data pre-processing or additional filtering. -->
+## Citation
 
-[More Information Needed]
+```bibtex
+@article{dettmers2023qlora,
+  title={QLoRA: Efficient Finetuning of Quantized LLMs},
+  author={Dettmers, Tim and Pagnoni, Artidoro and Holtzman, Ari and Zettlemoyer, Luke},
+  journal={NeurIPS},
+  year={2023}
+}
 
-### Training Procedure
-
-<!-- This relates heavily to the Technical Specifications. Content here should link to that section when it is relevant to the training procedure. -->
-
-#### Preprocessing [optional]
-
-[More Information Needed]
-
-
-#### Training Hyperparameters
-
-- **Training regime:** [More Information Needed] <!--fp32, fp16 mixed precision, bf16 mixed precision, bf16 non-mixed precision, fp16 non-mixed precision, fp8 mixed precision -->
-
-#### Speeds, Sizes, Times [optional]
-
-<!-- This section provides information about throughput, start/end time, checkpoint size if relevant, etc. -->
-
-[More Information Needed]
-
-## Evaluation
-
-<!-- This section describes the evaluation protocols and provides the results. -->
-
-### Testing Data, Factors & Metrics
-
-#### Testing Data
-
-<!-- This should link to a Dataset Card if possible. -->
-
-[More Information Needed]
-
-#### Factors
-
-<!-- These are the things the evaluation is disaggregating by, e.g., subpopulations or domains. -->
-
-[More Information Needed]
-
-#### Metrics
-
-<!-- These are the evaluation metrics being used, ideally with a description of why. -->
-
-[More Information Needed]
-
-### Results
-
-[More Information Needed]
-
-#### Summary
-
-
-
-## Model Examination [optional]
-
-<!-- Relevant interpretability work for the model goes here -->
-
-[More Information Needed]
-
-## Environmental Impact
-
-<!-- Total emissions (in grams of CO2eq) and additional considerations, such as electricity usage, go here. Edit the suggested text below accordingly -->
-
-Carbon emissions can be estimated using the [Machine Learning Impact calculator](https://mlco2.github.io/impact#compute) presented in [Lacoste et al. (2019)](https://arxiv.org/abs/1910.09700).
-
-- **Hardware Type:** [More Information Needed]
-- **Hours used:** [More Information Needed]
-- **Cloud Provider:** [More Information Needed]
-- **Compute Region:** [More Information Needed]
-- **Carbon Emitted:** [More Information Needed]
-
-## Technical Specifications [optional]
-
-### Model Architecture and Objective
-
-[More Information Needed]
-
-### Compute Infrastructure
-
-[More Information Needed]
-
-#### Hardware
-
-[More Information Needed]
-
-#### Software
-
-[More Information Needed]
-
-## Citation [optional]
-
-<!-- If there is a paper or blog post introducing the model, the APA and Bibtex information for that should go in this section. -->
-
-**BibTeX:**
-
-[More Information Needed]
-
-**APA:**
-
-[More Information Needed]
-
-## Glossary [optional]
-
-<!-- If relevant, include terms and calculations in this section that can help readers understand the model or model card. -->
-
-[More Information Needed]
-
-## More Information [optional]
-
-[More Information Needed]
-
-## Model Card Authors [optional]
-
-[More Information Needed]
-
-## Model Card Contact
-
-[More Information Needed]
-### Framework versions
-
-- PEFT 0.18.1
+@misc{taori2023alpaca,
+  title={Alpaca: A Strong, Replicable Instruction-Following Model},
+  author={Taori, Rohan and others},
+  year={2023},
+  publisher={Stanford Center for Research on Foundation Models}
+}
+```
