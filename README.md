@@ -2,8 +2,6 @@
 
 **Scalable LLM Deployment: Benchmarking 4-Bit Quantization and QLoRA Fine-Tuning**
 
-CSCI 4900/6900 - Foundations of Deep Learning and Generative AI - UGA Spring 2026 - Dr. Geng Yuan
-
 ---
 
 ## Overview
