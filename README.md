@@ -65,11 +65,7 @@ QuantLlama/
 │   ├── qualitative_phase3.csv  # 20-prompt side-by-side outputs
 │   └── plots/                  # Bar charts (perplexity, speed, VRAM)
 ├── plot_results.py             # Generates benchmark bar charts
-├── requirements.txt            # Full environment dependencies
-├── PHASE1_SUMMARY.md
-├── PHASE2_SUMMARY.md
-├── PHASE3_SUMMARY.md
-└── PHASE4_SUMMARY.md
+└── requirements.txt            # Full environment dependencies
 ```
 
 ---
