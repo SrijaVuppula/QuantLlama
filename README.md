@@ -64,6 +64,7 @@ QuantLlama/
 │   ├── results.csv             # Full 4-row benchmark table
 │   ├── qualitative_phase3.csv  # 20-prompt side-by-side outputs
 │   └── plots/                  # Bar charts (perplexity, speed, VRAM)
+├── timing.py                   # Per-stage inference timing (tokenization, forward pass, decoding)
 ├── plot_results.py             # Generates benchmark bar charts
 └── requirements.txt            # Full environment dependencies
 ```
