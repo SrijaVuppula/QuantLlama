@@ -491,9 +491,11 @@ print(tokenizer.decode(outputs[0], skip_special_tokens=True))
 
 ---
 
-## References
+## Libraries & Models
 
-- Dettmers et al. (2023). QLoRA: Efficient Finetuning of Quantized LLMs. NeurIPS 2023. [arXiv:2305.14314](https://arxiv.org/abs/2305.14314)
-- Frantar et al. (2022). GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers. [arXiv:2210.17323](https://arxiv.org/abs/2210.17323)
-- Hu et al. (2021). LoRA: Low-Rank Adaptation of Large Language Models. ICLR 2022. [arXiv:2106.09685](https://arxiv.org/abs/2106.09685)
-- Taori et al. (2023). Alpaca: A Strong, Replicable Instruction-Following Model. Stanford CRFM.
+- [bitsandbytes](https://github.com/TimDettmers/bitsandbytes) — 4-bit quantization
+- [PEFT](https://github.com/huggingface/peft) — LoRA / QLoRA implementation
+- [TRL](https://github.com/huggingface/trl) — SFTTrainer for fine-tuning
+- [AutoGPTQ](https://github.com/AutoGPTQ/AutoGPTQ) — GPTQ quantization
+- [Meta Llama 3.1](https://huggingface.co/meta-llama/Llama-3.1-8B) — base model
+- [Stanford Alpaca dataset](https://github.com/tatsu-lab/stanford_alpaca) — fine-tuning data
